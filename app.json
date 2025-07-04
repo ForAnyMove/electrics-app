@@ -9,7 +9,11 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.alexfam.electricapp",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -33,6 +37,16 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "custom photos permission",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to open the camera",
+
+          "//": "Disables the microphone permission",
+          "microphonePermission": false
         }
       ]
     ],

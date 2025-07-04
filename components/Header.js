@@ -1,4 +1,4 @@
-import { FontAwesome, Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -8,15 +8,16 @@ const router = useRouter();
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => router.push('/notifications')}>
+      {/* <TouchableOpacity onPress={() => router.push('/notifications')}>
         <Ionicons name="notifications-outline" size={24} color="black" />
-      </TouchableOpacity>
-      <Text style={styles.title}>{title}</Text>
+      </TouchableOpacity> */}
+      <Text style={styles.logoText}>Flalx</Text>
+      {/* <Text style={styles.title}>{title}</Text> */}
       <TouchableOpacity onPress={() => router.push('/profile')}>
         {userAvatar ? (
           <Image source={{ uri: userAvatar }} style={styles.avatar} />
         ) : (
-          <FontAwesome name="user-circle-o" size={28} color="black" />
+          <Ionicons name="person-circle-outline" size={40} color="#888" />
         )}
       </TouchableOpacity>
     </View>
@@ -33,6 +34,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     // borderBottomWidth: 1,
     // borderColor: '#eee',
+  },
+  logoText: {
+    fontSize: 24,
+    textTransform: 'uppercase',
+    fontWeight: 'bold',
+    color: '#0A62EA',
   },
   title: {
     fontSize: 18,

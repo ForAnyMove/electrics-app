@@ -10,27 +10,37 @@ export default function TabsLayout() {
       screenOptions={({ route }) => ({
         tabBarIcon: ({ color, size }) => {
           const icons = {
-            'my-references': 'document-text-outline',
-            'my-readings': 'book-outline',
-            'store': 'cart-outline',
-            'job-calls': 'briefcase-outline',
-            'home': 'home-outline',
+            store: 'storefront-outline',
+            providers: 'people-outline',
+            jobs: 'briefcase-outline',
+            home: 'home-outline',
           };
           return <Ionicons name={icons[route.name]} size={22} color={color} />;
         },
+        tabBarLabel: {
+          // 'my-references': 'References',
+          store: 'Store',
+          providers: 'Providers',
+          jobs: 'Jobs',
+          // home: 'Home',
+        }[route.name],
         tabBarActiveTintColor: '#4CAF50',
         tabBarInactiveTintColor: 'gray',
+        tabBarStyle: {
+          backgroundColor: '#f0f0f0', // светло-серый фон
+          borderTopColor: 'transparent', // убираем верхнюю границу
+        },
         // Кастомный хэдер
-        header: route.name !== 'store'
-          ? () => <Header title={route.name.replace(/-/g, ' ')} />
-          : undefined, // store будет рисовать свой хэдер внутри компонента
+        header: () => <Header />,
+          // route.name !== 'store'
+          //   ? () => <Header title={route.name.replace(/-/g, ' ')} />
+          //   : undefined, // store будет рисовать свой хэдер внутри компонента
       })}
     >
-      <Tabs.Screen name="my-references" />
-      <Tabs.Screen name="my-readings" />
-      <Tabs.Screen name="store" />
-      <Tabs.Screen name="job-calls" />
-      <Tabs.Screen name="home" />
+      <Tabs.Screen name='store'/>
+      <Tabs.Screen name='providers' />
+      <Tabs.Screen name='jobs' />
+      {/* <Tabs.Screen name='home' /> */}
     </Tabs>
   );
 }
