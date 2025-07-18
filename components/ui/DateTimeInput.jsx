@@ -1,8 +1,10 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { Platform, Text, TouchableOpacity, View } from 'react-native';
+import { useComponentContext } from '../../context/globalAppContext';
 
-export default function DateTimeInput({ label, value, onChange }) {
+export default function DateTimeInput({ label, value, onChange, readOnly = false }) {
+  const { activeThemeStyles } = useComponentContext();
   const [showPicker, setShowPicker] = useState(false);
 
   const displayValue = value
@@ -18,9 +20,10 @@ export default function DateTimeInput({ label, value, onChange }) {
 
   if (Platform.OS === 'web') {
     return (
-      <View style={styles.dateTimeBlock}>
+      <View style={[styles.dateTimeBlock, { backgroundColor: activeThemeStyles?.formInputBackground}]}>
         <Text style={styles.label}>{label}</Text>
         <input
+          disabled={readOnly}
           type='datetime-local'
           value={value ? new Date(value).toISOString().slice(0, 16) : ''}
           onChange={(e) => {
@@ -31,7 +34,7 @@ export default function DateTimeInput({ label, value, onChange }) {
             margin: '0 auto',
             padding: 10,
             borderRadius: 6,
-            backgroundColor: 'rgba(241, 244, 249, 1.00)',
+            backgroundColor: 'transparent',
             borderWidth: 0,
             width: '80%',
           }}
@@ -41,12 +44,12 @@ export default function DateTimeInput({ label, value, onChange }) {
   }
 
   return (
-    <View style={styles.dateTimeBlock}>
+    <View style={[styles.dateTimeBlock, { backgroundColor: activeThemeStyles?.formInputBackground}]}>
       <Text style={styles.label}>{label}</Text>
       <TouchableOpacity
-        onPress={() => setShowPicker(true)}
+        onPress={() => !readOnly && setShowPicker(true)}
       >
-        <Text style={value ? styles.dateTimeText : styles.dateTimePlaceholder}>{displayValue}</Text>
+        <Text style={value ? styles.dateTimeText : styles.dateTimePlaceholder}>📅 {displayValue}</Text>
       </TouchableOpacity>
 
       {showPicker && (
@@ -69,7 +72,6 @@ const styles = {
   },
   dateTimeBlock: {
     flex: 1,
-    backgroundColor: '#F1F4F9',
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 8,

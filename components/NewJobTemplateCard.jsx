@@ -1,3 +1,4 @@
+import { useComponentContext } from '@/context/globalAppContext';
 import { Ionicons } from '@expo/vector-icons';
 import { Dimensions, Image, StyleSheet, Text, View } from 'react-native';
 
@@ -15,9 +16,11 @@ const CARD_MARGIN = 8;
 const totalSpacing = CARD_MARGIN * 2 * numColumns + CONTAINER_HORIZONTAL_PADDING;
 const CARD_WIDTH = ((SCREEN_WIDTH - totalSpacing) / numColumns) * 0.95; // Уменьшаем ширину карточки на 5% для отступов
 
-export default function NewJobTemplateCard({ templateTitle, imageSource }) {  
+export default function NewJobTemplateCard({ templateTitle, imageSource }) {
+  const { activeThemeStyles } = useComponentContext();
+
   return (
-    <View style={[styles.card, { width: CARD_WIDTH }]}>
+    <View style={[styles.card, { width: CARD_WIDTH, backgroundColor: activeThemeStyles?.defaultBlocksBackground }]}>
       {imageSource ? (
         <Image
           source={{ uri: imageSource }}
@@ -25,8 +28,8 @@ export default function NewJobTemplateCard({ templateTitle, imageSource }) {
           resizeMode="cover"
         />
       ) : (
-        <View style={styles.placeholder}>
-          <Ionicons name="image-outline" size={32} color="#999" />
+        <View style={[styles.placeholder, { backgroundColor: activeThemeStyles?.defaultBlocksMockBackground }]}>
+          <Ionicons name="image-outline" size={32} color={activeThemeStyles?.defaultBlocksMockColor} />
         </View>
       )}
       <Text style={styles.title}>{templateTitle}</Text>
@@ -38,7 +41,6 @@ const styles = StyleSheet.create({
   card: {
     margin: CARD_MARGIN,
     borderRadius: 7,
-    backgroundColor: '#fff',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
@@ -53,7 +55,6 @@ const styles = StyleSheet.create({
   placeholder: {
     width: '100%',
     aspectRatio: 1,
-    backgroundColor: '#eee',
     justifyContent: 'center',
     alignItems: 'center',
   },

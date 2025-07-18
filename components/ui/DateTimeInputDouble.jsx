@@ -1,8 +1,10 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useComponentContext } from '../../context/globalAppContext';
 
-export default function DateTimeInputDouble({ label, value, onChange }) {
+export default function DateTimeInputDouble({ label, value, onChange, readOnly = false }) {
+  const { activeThemeStyles } = useComponentContext();
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -32,21 +34,21 @@ export default function DateTimeInputDouble({ label, value, onChange }) {
   };
 
   return (
-    <View style={styles.dateTimeBlock}>
+    <View style={[styles.dateTimeBlock, { backgroundColor: activeThemeStyles?.formInputBackground }]}>
       <Text style={{ fontWeight: 'bold', marginBottom: 6 }}>{label}</Text>
 
       {/* Кнопка выбора даты */}
       <TouchableOpacity
-        onPress={() => setShowDatePicker(true)}
-        style={{ backgroundColor: '#F1F4F9', padding: 12, borderRadius: 8, marginBottom: 8 }}
+        onPress={() => !readOnly && setShowDatePicker(true)}
+        style={{ backgroundColor: 'transparent', padding: 12, borderRadius: 8, marginBottom: 8 }}
       >
         <Text>📅 {date.toLocaleDateString()}</Text>
       </TouchableOpacity>
 
       {/* Кнопка выбора времени */}
       <TouchableOpacity
-        onPress={() => setShowTimePicker(true)}
-        style={{ backgroundColor: '#F1F4F9', padding: 12, borderRadius: 8 }}
+        onPress={() => !readOnly && setShowTimePicker(true)}
+        style={{ backgroundColor: 'transparent', padding: 12, borderRadius: 8 }}
       >
         <Text>🕒 {date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
       </TouchableOpacity>
@@ -80,7 +82,6 @@ const styles = StyleSheet.create({
   },
   dateTimeBlock: {
     flex: 1,
-    backgroundColor: '#F1F4F9',
     paddingVertical: 12,
     paddingHorizontal: 18,
     borderRadius: 8,

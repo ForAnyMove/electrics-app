@@ -1,56 +1,56 @@
-import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useComponentContext } from '@/context/globalAppContext';
+import { useState } from 'react';
+import { ScrollView, View } from 'react-native';
+import JobTypeSelector from '../../components/JobTypeSelector';
+import ProviderSummaryBlock from '../../components/ProviderSummaryBlock';
+import SearchPanel from '../../components/SearchPanel';
 
 export default function StoreScreen() {
+  const { activeThemeStyles, users } = useComponentContext();
+  const [filteredJobs, setFilteredJobs] = useState([]);
+  const [searchValue, setSearchValue] = useState('');
   return (
-    <View style={{ flex: 1 }}>
-      {/* Поисковая панель */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          placeholder="Search products..."
-          style={styles.searchInput}
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: activeThemeStyles?.backgroundColor },
+      ]}
+    >
+      <View>
+        <SearchPanel
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
         />
       </View>
-
-      {/* Горизонтальный список категорий */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-        {Array.from({ length: 15 }).map((_, idx) => (
-          <View key={idx} style={styles.categoryItem}>
-            <Text>Category {idx + 1}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      {/* Основное содержимое */}
-      <View style={{ padding: 16 }}>
-        <Text>Store content here...</Text>
+      <View>
+        <JobTypeSelector
+          selectedTypes={filteredJobs}
+          setSelectedTypes={setFilteredJobs}
+        />
       </View>
+      <ScrollView>
+        {users
+          .filter(
+            (user) =>
+              (filteredJobs.length > 0 ?
+                user?.jobTypes.some((jobType) =>
+                  filteredJobs.includes(jobType)
+                ) : user) &&
+              (user?.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+              user?.surname.toLowerCase().includes(searchValue.toLowerCase()))
+          )
+          .map((user, index) => (
+            <ProviderSummaryBlock key={index} user={user} />
+          ))}
+      </ScrollView>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  searchContainer: {
-    padding: 16,
-    backgroundColor: '#fff',
+const styles = {
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 20,
   },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-  },
-  categoryScroll: {
-    backgroundColor: '#f8f8f8',
-    paddingVertical: 10,
-    paddingLeft: 10,
-  },
-  categoryItem: {
-    marginRight: 12,
-    padding: 10,
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#ccc',
-  },
-});
+};

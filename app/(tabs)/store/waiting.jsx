@@ -1,89 +1,143 @@
+import { useComponentContext } from '@/context/globalAppContext';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import { useState } from 'react';
-import { View } from 'react-native';
-import JobTypeSelector from '../../../components/JobTypeSelector';
+import {
+  Image,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+// import JobTypeSelector from '../../../components/JobTypeSelector';
+import { JOB_TYPES } from '@/constants/jobTypes';
 import SearchPanel from '../../../components/SearchPanel';
-
-const testJobs = [
-  {
-    address: 'Hasmonaim 9, Ramat Gan',
-    time: '08:30-09:30 22/05/2022',
-    types: ['Installation of accessories', 'service call'],
-    creator: {
-      name: 'Yossi',
-      avatar: 'https://randomuser.me/api/portraits/men/31.jpg',
-    },
-    contact: {
-      name: 'Tamar',
-      avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    },
-  },
-  {
-    address: 'Hertzel 12, Tel Aviv',
-    time: '10:00-11:00 23/05/2022',
-    types: ['service call'],
-    creator: {
-      name: 'Ariel',
-      avatar: null,
-    },
-    contact: {
-      name: 'Dana',
-      avatar: 'https://randomuser.me/api/portraits/women/22.jpg',
-    },
-  },
-  {
-    address: 'HaNeviim 5, Jerusalem',
-    time: '14:00-15:00 24/05/2022',
-    types: ['Installation of accessories'],
-    creator: {
-      name: 'Eli',
-      avatar: 'https://randomuser.me/api/portraits/men/12.jpg',
-    },
-    contact: {
-      name: 'Noa',
-      avatar: null,
-    },
-  },
-  {
-    address: 'Ben Yehuda 6, Haifa',
-    time: '16:30-17:30 25/05/2022',
-    types: ['Lighting setup'],
-    creator: {
-      name: 'Maya',
-      avatar: null,
-    },
-    contact: {
-      name: 'Ron',
-      avatar: 'https://randomuser.me/api/portraits/men/45.jpg',
-    },
-  },
-  {
-    address: 'Kaplan 4, Beersheba',
-    time: '18:00-19:00 26/05/2022',
-    types: ['Controller installation', 'service call'],
-    creator: {
-      name: 'Tom',
-      avatar: 'https://randomuser.me/api/portraits/men/76.jpg',
-    },
-    contact: {
-      name: 'Lea',
-      avatar: 'https://randomuser.me/api/portraits/women/18.jpg',
-    },
-  },
-];
+import ShowJobModal from '../../../components/ShowJobModal';
 
 export default function WaitingScreen() {
+  const { createdJobs, activeThemeStyles, setCurrentJobId } =
+    useComponentContext();
   const [filteredJobs, setFilteredJobs] = useState([]);
   const [searchValue, setSearchValue] = useState('');
+  // const router = useRouter();
+  const [showJobModalVisible, setShowJobModalVisible] = useState(false);
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: activeThemeStyles?.backgroundColor },
+      ]}
+    >
       <View>
-        <SearchPanel searchValue={searchValue} setSearchValue={setSearchValue} />
+        <SearchPanel
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+        />
       </View>
-      <View>
+      {/* <View>
         <JobTypeSelector selectedTypes={filteredJobs} setSelectedTypes={setFilteredJobs} />
-      </View>
-      
+      </View> */}
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        {createdJobs
+          .filter((value) =>
+            value.type.toLowerCase().includes(searchValue.toLowerCase())
+          )
+          .map((job, index) => {
+            if (job.approvedProvider) return;
+            const hasImage = job.images && job.images.length > 0;
+            return (
+              <TouchableOpacity
+                key={index}
+                style={styles.cardContainer}
+                onPress={() => {
+                  setCurrentJobId(job.id);
+                  // router.push(`/show-job-modal`);
+                  setShowJobModalVisible(true);
+                }}
+              >
+                <View
+                  style={[
+                    styles.cardContent,
+                    {
+                      backgroundColor:
+                        activeThemeStyles?.defaultBlocksBackground,
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.imageContainer,
+                      {
+                        backgroundColor:
+                          activeThemeStyles?.defaultBlocksMockBackground,
+                      },
+                    ]}
+                  >
+                    {hasImage ? (
+                      <Image
+                        source={{ uri: job.images[0] }}
+                        style={styles.image}
+                        resizeMode='cover'
+                      />
+                    ) : (
+                      <View style={styles.placeholderImage}>
+                        <FontAwesome6
+                          name='image'
+                          size={20}
+                          color={activeThemeStyles?.defaultBlocksMockColor}
+                        />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.textContent}>
+                    <Text
+                      style={[
+                        styles.title,
+                        { color: activeThemeStyles?.textColor },
+                      ]}
+                    >
+                      {JOB_TYPES[job.type]}
+                    </Text>
+                    {job.description ? (
+                      <Text
+                        style={[
+                          styles.description,
+                          { color: activeThemeStyles?.textColor },
+                        ]}
+                      >
+                        {job.description}
+                      </Text>
+                    ) : null}
+                  </View>
+                  {job.providers?.length > 0 && (
+                    <View
+                      style={[
+                        styles.badge,
+                        {
+                          backgroundColor:
+                            activeThemeStyles?.secondaryBadgeBackground,
+                        },
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.badgeText,
+                          { color: activeThemeStyles?.badgeTextColor },
+                        ]}
+                      >
+                        {job.providers.length}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+      </ScrollView>
+      <Modal visible={showJobModalVisible} animationType='slide'>
+        <ShowJobModal closeModal={() => setShowJobModalVisible(false)} status='store-waiting' />
+      </Modal>
     </View>
   );
 }
@@ -91,24 +145,73 @@ export default function WaitingScreen() {
 const styles = {
   container: {
     flex: 1,
-    backgroundColor: '#fff',
     paddingHorizontal: 16,
     paddingVertical: 20,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    paddingHorizontal: 25,
-  },
-  headerText: {
-    fontSize: 14,
-    fontWeight: '400',
-    textAlign: 'center',
-    color: '#555',
+    paddingBottom: 0,
   },
   scrollContainer: {
-    paddingBottom: 20,
+    paddingBottom: 0,
+  },
+  cardContainer: {
+    marginBottom: 10,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    borderRadius: 12,
+    alignItems: 'center',
+    position: 'relative',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  imageContainer: {
+    width: 68,
+    height: 68,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+  },
+  placeholderImage: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  textContent: {
+    flex: 1,
+    height: '80%',
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  description: {
+    fontSize: 14,
+    marginTop: 2,
+  },
+  badge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    borderRadius: 999,
+    paddingHorizontal: 2,
+    paddingVertical: 2,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  badgeText: {
+    fontWeight: 'bold',
+    fontSize: 12,
   },
 };

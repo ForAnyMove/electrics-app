@@ -1,7 +1,7 @@
 import { FontAwesome } from '@expo/vector-icons'; // или FontAwesome6, если используешь
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useRouter } from 'expo-router';
+import { useMemo, useState } from 'react';
 import {
   FlatList,
   Image,
@@ -14,14 +14,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import CustomFlatList from '../../components/ui/CustomFlatList';
-import DateTimeInput from '../../components/ui/DateTimeInput';
-import DateTimeInputDouble from '../../components/ui/DateTimeInputDouble';
-import ImagePickerModal from '../../components/ui/ImagePickerModal';
-import { JOB_SUB_TYPES } from '../../constants/jobSubTypes';
-import { JOB_TYPES } from '../../constants/jobTypes';
-import { LICENSES } from '../../constants/licenses';
-import { useComponentContext } from '../../context/globalAppContext';
+import { JOB_SUB_TYPES } from '../constants/jobSubTypes';
+import { JOB_TYPES } from '../constants/jobTypes';
+import { LICENSES } from '../constants/licenses';
+import { useComponentContext } from '../context/globalAppContext';
+import CustomFlatList from './ui/CustomFlatList';
+import DateTimeInput from './ui/DateTimeInput';
+import DateTimeInputDouble from './ui/DateTimeInputDouble';
+import ImagePickerModal from './ui/ImagePickerModal';
 
 const WebAbsoluteWrapper = ({ children, style }) => {
   if (Platform.OS === 'web') {
@@ -126,28 +126,54 @@ const renderAutocomplete = ({
   </View>
 );
 
-export default function NewJobModal() {
+export default function NewJobModal({
+  activeKey,
+  closeModal,
+  editMode = false,
+}) {
   const router = useRouter();
-  const { key } = useLocalSearchParams();
-  const { createdJobs, setCreatedJobs, activeThemeStyles } =
-    useComponentContext();
+  // const { key } = useLocalSearchParams();
+  const {
+    createdJobs,
+    setCreatedJobs,
+    activeThemeStyles,
+    currentJobId,
+    editJobById,
+  } = useComponentContext();
 
-  const [type, setType] = useState(JOB_TYPES[key] || '');
+  const currentJobInfo = useMemo(
+    () => createdJobs.find((job) => job.id === currentJobId),
+    [createdJobs, currentJobId]
+  );
+
+  const [type, setType] = useState(editMode ? currentJobInfo?.type : '');
   const [filteredTypes, setFilteredTypes] = useState(JOB_TYPES);
-  const [subType, setSubType] = useState('');
+  const [subType, setSubType] = useState(
+    editMode ? currentJobInfo?.subType : ''
+  );
   const [filteredSubTypes, setFilteredSubTypes] = useState(JOB_SUB_TYPES);
-  const [profession, setProfession] = useState('');
+  const [profession, setProfession] = useState(
+    editMode ? currentJobInfo?.profession : ''
+  );
   const [filteredProfessions, setFilteredProfessions] = useState(LICENSES);
-  const [description, setDescription] = useState('');
-  const [price, setPrice] = useState('');
+  const [description, setDescription] = useState(
+    editMode ? currentJobInfo?.description : ''
+  );
+  const [price, setPrice] = useState(editMode ? currentJobInfo?.price : '');
 
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState(editMode ? currentJobInfo?.images : []);
   const [modalVisible, setModalVisible] = useState(false);
 
-  const [location, setLocation] = useState('');
+  const [location, setLocation] = useState(
+    editMode ? currentJobInfo?.location : ''
+  );
 
-  const [startDateTime, setStartDateTime] = useState(null);
-  const [endDateTime, setEndDateTime] = useState(null);
+  const [startDateTime, setStartDateTime] = useState(
+    editMode ? currentJobInfo?.startDateTime : null
+  );
+  const [endDateTime, setEndDateTime] = useState(
+    editMode ? currentJobInfo?.endDateTime : null
+  );
 
   const [showStartPicker, setShowStartPicker] = useState(false);
   const [showEndPicker, setShowEndPicker] = useState(false);
@@ -174,32 +200,84 @@ export default function NewJobModal() {
 
     if (hasErrors) return;
 
-    const newJob = {
-      type,
-      subType,
-      profession,
-      description,
-      price,
-      images,
-      location,
-      // Преобразуем даты в ISO формат
-      startDateTime: startDateTime
-        ? new Date(startDateTime).toISOString()
-        : null,
-      endDateTime: endDateTime ? new Date(endDateTime).toISOString() : null,
-      createdAt: new Date().toISOString(),
-      id: Date.now().toString(), // уникальный ID для нового задания
-      status: 'waiting', // статус задания
-      creator: 'currentUserId', // здесь можно указать ID текущего пользователя
-      providers: [],
-    };
+    if (editMode && currentJobId) {
+      const jobChanges = {};
 
-    setCreatedJobs((prev) => [...prev, newJob]);
-    if (router.canGoBack?.()) {
-      router.back();
+      if (type !== currentJobInfo.type) jobChanges.type = type;
+      if (subType !== currentJobInfo.subType) jobChanges.subType = subType;
+      if (profession !== currentJobInfo.profession)
+        jobChanges.profession = profession;
+      if (description !== currentJobInfo.description)
+        jobChanges.description = description;
+      if (price !== currentJobInfo.price) jobChanges.price = price;
+      if (location !== currentJobInfo.location) jobChanges.location = location;
+      // сравнение дат (если обе существуют и разные)
+      if (
+        startDateTime &&
+        new Date(startDateTime).toISOString() !== currentJobInfo.startDateTime
+      ) {
+        jobChanges.startDateTime = new Date(startDateTime).toISOString();
+      }
+      if (
+        endDateTime &&
+        new Date(endDateTime).toISOString() !== currentJobInfo.endDateTime
+      ) {
+        jobChanges.endDateTime = new Date(endDateTime).toISOString();
+      }
+      if (Object.keys(jobChanges).length > 0) {
+        editJobById(currentJobId, jobChanges);
+      }
     } else {
-      router.replace(`/store`);
+      const newJob = {
+        type,
+        subType,
+        profession,
+        description,
+        price,
+        images,
+        location,
+        // Преобразуем даты в ISO формат
+        startDateTime: startDateTime
+          ? new Date(startDateTime).toISOString()
+          : null,
+        endDateTime: endDateTime ? new Date(endDateTime).toISOString() : null,
+        createdAt: new Date().toISOString(),
+        id: Date.now().toString(), // уникальный ID для нового задания
+        status: 'waiting', // статус задания
+        creator: 'currentUserId', // здесь можно указать ID текущего пользователя
+        providers: [],
+        history: [],
+      };
+      newJob.history = [
+        {
+          type: 'Created',
+          date: newJob.createdAt,
+          changes: {
+            type,
+            subType,
+            profession,
+            description,
+            price,
+            images: images.length,
+            location,
+            startDateTime: startDateTime
+              ? new Date(startDateTime).toISOString()
+              : null,
+            endDateTime: endDateTime
+              ? new Date(endDateTime).toISOString()
+              : null,
+          },
+        },
+      ];
+      setCreatedJobs((prev) => [...prev, newJob]);
     }
+
+    // if (router.canGoBack?.()) {
+    //   router.back();
+    // } else {
+    //   router.replace(`/store`);
+    // }
+    closeModal();
   };
 
   const handleImageAdd = (imagesList) => {
@@ -418,9 +496,10 @@ export default function NewJobModal() {
       >
         <View style={styles.header}>
           <TouchableOpacity
-            onPress={() =>
-              router.canGoBack?.() ? router.back() : router.replace('/store')
-            }
+            // onPress={() =>
+            //   router.canGoBack?.() ? router.back() : router.replace('/store')
+            // }
+            onPress={() => closeModal()}
           >
             <Text style={styles.closeButton}>✕</Text>
           </TouchableOpacity>
@@ -464,7 +543,7 @@ export default function NewJobModal() {
                 fontWeight: 'bold',
               }}
             >
-              Create
+              {editMode ? 'Save' : 'Create'}
             </Text>
           </TouchableOpacity>
         </View>

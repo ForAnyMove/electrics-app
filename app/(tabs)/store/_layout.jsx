@@ -5,11 +5,14 @@ import {
   Animated,
   Dimensions,
   PanResponder,
+  Platform,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
 
+import { useComponentContext } from '@/context/globalAppContext';
+import { useRouter } from 'expo-router';
 import DoneScreen from './done';
 import InProgressScreen from './inProgress';
 import NewScreen from './new';
@@ -35,10 +38,12 @@ const TAB_TITLES = ['New', 'Waiting', 'In progress', 'Done'];
 const SCREEN_WIDTH = Dimensions.get('window').width;
 
 export default function ReferenceScreen() {
-  const [activeTab, setActiveTab] = useState(0);
-  const activeTabRef = useRef(0);
+  const { activeThemeStyles, storeActiveTab } = useComponentContext();
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState(0)
+  // const storeActiveTab = useRef(0);
   const scrollX = useRef(
-    new Animated.Value(-activeTabRef.current * SCREEN_WIDTH)
+    new Animated.Value(-storeActiveTab.current * SCREEN_WIDTH)
   ).current;
 
   const tabWidth = SCREEN_WIDTH / TAB_TITLES.length;
@@ -75,7 +80,11 @@ export default function ReferenceScreen() {
         i * SCREEN_WIDTH,
         (i + 1) * SCREEN_WIDTH,
       ],
-      outputRange: ['#999', '#000', '#999'],
+      outputRange: [
+        activeThemeStyles?.unactiveTextColor,
+        activeThemeStyles?.textColor,
+        activeThemeStyles?.unactiveTextColor,
+      ],
       extrapolate: 'clamp',
     });
   });
@@ -109,8 +118,8 @@ export default function ReferenceScreen() {
           isSwipeRight.current = gestureState.dx > 0; // свайп вправо — true, влево — false
         }
         if (
-          (activeTabRef.current === 0 && isSwipeRight.current) ||
-          (activeTabRef.current === TAB_TITLES.length - 1 &&
+          (storeActiveTab.current === 0 && isSwipeRight.current) ||
+          (storeActiveTab.current === TAB_TITLES.length - 1 &&
             !isSwipeRight.current)
         )
           return;
@@ -122,15 +131,15 @@ export default function ReferenceScreen() {
         const dx = gestureState.dx;
         const swipeThreshold = SCREEN_WIDTH * 0.25;
 
-        let newTab = activeTabRef.current;
+        let newTab = storeActiveTab.current;
 
         if (
           dx < swipeThreshold * -1 &&
-          activeTabRef.current < TAB_TITLES.length - 1
+          storeActiveTab.current < TAB_TITLES.length - 1
         ) {
-          newTab = activeTabRef.current + 1;
-        } else if (dx > swipeThreshold && activeTabRef.current > 0) {
-          newTab = activeTabRef.current - 1;
+          newTab = storeActiveTab.current + 1;
+        } else if (dx > swipeThreshold && storeActiveTab.current > 0) {
+          newTab = storeActiveTab.current - 1;
         }
 
         Animated.timing(scrollX, {
@@ -138,7 +147,7 @@ export default function ReferenceScreen() {
           duration: 250,
           useNativeDriver: false,
         }).start(() => {
-          activeTabRef.current = newTab;
+          storeActiveTab.current = newTab;
           setActiveTab(newTab);
         });
       },
@@ -151,7 +160,7 @@ export default function ReferenceScreen() {
       duration: 250,
       useNativeDriver: false,
     }).start(() => {
-      activeTabRef.current = index;
+      storeActiveTab.current = index;
       setActiveTab(index);
     });
   };
@@ -159,13 +168,13 @@ export default function ReferenceScreen() {
   const chooseIcon = (iconName) => {
     switch (iconName) {
       case 'Waiting':
-        return <FontAwesome6 name={icons[iconName]} size={22} color={'#000'} />;
+        return <FontAwesome6 name={icons[iconName]} size={22} color={activeThemeStyles?.textColor} />;
       case 'New':
-        return <Entypo name={icons[iconName]} size={22} color={'#000'} />;
+        return <Entypo name={icons[iconName]} size={22} color={activeThemeStyles?.textColor} />;
       case 'Done':
-        return <FontAwesome6 name={icons[iconName]} size={22} color={'#000'} />;
+        return <FontAwesome6 name={icons[iconName]} size={22} color={activeThemeStyles?.textColor} />;
       case 'In progress':
-        return <FontAwesome6 name={icons[iconName]} size={22} color={'#000'} />;
+        return <FontAwesome6 name={icons[iconName]} size={22} color={activeThemeStyles?.textColor} />;
       default:
         break;
     }
@@ -178,9 +187,7 @@ export default function ReferenceScreen() {
         style={{
           flexDirection: 'row',
           height: 84,
-          backgroundColor: '#fff',
-          // borderBottomWidth: 2,
-          // borderBottomColor: '#DFDFFF',
+          backgroundColor: activeThemeStyles?.backgroundColor,
           overflow: 'hidden',
         }}
       >
@@ -193,7 +200,6 @@ export default function ReferenceScreen() {
               alignItems: 'center',
               justifyContent: 'flex-end',
               paddingBottom: 6,
-              backgroundColor: '#fff',
             }}
           >
             {/* Иконка */}
@@ -213,14 +219,14 @@ export default function ReferenceScreen() {
                     minWidth: 16,
                     height: 16,
                     borderRadius: 8,
-                    backgroundColor: 'orange',
+                    backgroundColor: activeThemeStyles?.mainBadgeBackground,
                     justifyContent: 'center',
                     alignItems: 'center',
                     paddingHorizontal: 4,
                   }}
                 >
                   <Text
-                    style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}
+                    style={{ color: activeThemeStyles?.badgeTextColor, fontSize: 10, fontWeight: 'bold' }}
                   >
                     {badgeCounts[title]}
                   </Text>
@@ -258,7 +264,7 @@ export default function ReferenceScreen() {
             left: underlineTranslateX,
             width: underlineAnimatedWidth,
             height: 3,
-            backgroundColor: '#0A62EA',
+            backgroundColor: activeThemeStyles?.primaryColor,
             borderRadius: 3,
             zIndex: 2,
           }}
@@ -271,7 +277,7 @@ export default function ReferenceScreen() {
             left: 0,
             right: 0,
             height: 3,
-            backgroundColor: '#DFDFFF',
+            backgroundColor: activeThemeStyles?.formInputBackground,
             zIndex: 1,
           }}
         />
@@ -302,6 +308,27 @@ export default function ReferenceScreen() {
           )}
         </Animated.View>
       </View>
+      <TouchableOpacity
+        style={{
+          backgroundColor: activeThemeStyles?.mainBadgeBackground,
+          width: 45,
+          height: 45,
+          borderRadius: 25,
+          justifyContent: 'center',
+          alignItems: 'center',
+          position: 'absolute',
+          right: 20,
+          bottom: 20,
+          ...Platform.select({
+            web: {
+              right: 40,
+            },
+          }),
+        }}
+        onPress={() => router.push('/new-job-modal')}
+      >
+        <FontAwesome6 name='plus' size={14} color={activeThemeStyles?.badgeTextColor} />
+      </TouchableOpacity>
     </View>
   );
 }
